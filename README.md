@@ -8,7 +8,7 @@
 - 🔍 **Pattern-based search** across your entire user profile
 - 🚫 **Exclude words** from paths AND file contents
 - 📁 **6 file type filters** (Config, Text, Code, Web, All, Everything)
-- 👁️ **Content preview** (optional, up to 100 chars)
+- 👁️ **Content preview** (optional, up to 200 chars)
 - 🎯 **Excludes entire folders** containing exclude words (e.g., "cargo" if selected)
 - ⚡ **Fast PowerShell backend** with Batch frontend
 - 📊 **Real-time result counting**
@@ -34,7 +34,7 @@
 Simply double-click `SEAPCNE.bat` or run in CMD:
 ```
 SEAPCNE.bat
-📷 Preview
+📷 Preview:
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║      ███████╗███████╗ █████╗ ██████╗  ██████╗███╗   ██╗███████╗              ║
 ║      ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝              ║
