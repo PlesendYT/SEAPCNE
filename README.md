@@ -58,39 +58,3 @@ Encoding: UTF-8 (chcp 65001)
 MIT - Do whatever you want with it!
 
 ⭐ Star this repo if you find it useful!
-
-
----
-
-## 🏷️ **Option 3: Sehr kurz (für die GitHub-Repo-Sidebar)**
-🎨 A graphical file searcher with pattern matching, exclude filters, and content preview - written entirely in Batch/PowerShell hybrid.
-
-
----
-
-## 🔥 **Option 4: Mit Humor (wenn du lustig sein willst)**
-
-
-# SEAPCNE - Because Windows Search is Trash
-
-**A graphical file searcher that actually works.**
-
-You know that moment when you search for a file and Windows shows you 
-Bing results instead? Yeah, this ain't that.
-
-## What it does:
-- Finds your stuff. Fast.
-- Ignores folders you don't care about (like "cargo" or "node_modules" if selected)
-- Looks fancy while doing it (ASCII art, colors, boxes)
-
-## What it doesn't do:
-- Send your data to Microsoft
-- Take 5 minutes to index
-- Show you web results for "how to boil an egg"
-
-## Perfect for:
-- Developers tired of grep
-- People who think Batch files can't look cool
-- Anyone who's ever said "Where the hell is that config file?"
-
-**Made with ❤️ and questionable Batch scripting decisions.**
