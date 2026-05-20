@@ -8,8 +8,8 @@
 - 🔍 **Pattern-based search** across your entire user profile
 - 🚫 **Exclude words** from paths AND file contents
 - 📁 **6 file type filters** (Config, Text, Code, Web, All, Everything)
-- 👁️ **Content preview** (optional, up to 200 chars)
-- 🎯 **Excludes entire folders** containing exclude words (e.g., "cargo")
+- 👁️ **Content preview** (optional, up to 100 chars)
+- 🎯 **Excludes entire folders** containing exclude words (e.g., "cargo" if selected)
 - ⚡ **Fast PowerShell backend** with Batch frontend
 - 📊 **Real-time result counting**
 - 🖥️ **CMD/PowerShell compatible**
@@ -80,7 +80,7 @@ Bing results instead? Yeah, this ain't that.
 
 ## What it does:
 - Finds your stuff. Fast.
-- Ignores folders you don't care about (like "cargo" or "node_modules")
+- Ignores folders you don't care about (like "cargo" or "node_modules" if selected)
 - Looks fancy while doing it (ASCII art, colors, boxes)
 
 ## What it doesn't do:
