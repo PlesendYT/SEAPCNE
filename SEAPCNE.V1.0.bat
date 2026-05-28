@@ -65,74 +65,117 @@ set /p "SHOW=[96m│[0m [92m➤[0m "
 echo [96m└─────────────────────────────────────────────────────────────┘[0m
 echo.
 
-:: Scan-Info (ohne Animation)
+:: Validate search term
+if "!SEARCH!"=="" (
+  cls
+  echo [91m┌─────────────────────────────────────────────────────────────┐[0m
+  echo [91m│[0m               [93m[ERROR][0m Search term cannot be empty!              [91m│[0m
+  echo [91m└─────────────────────────────────────────────────────────────┘[0m
+  echo.
+  echo Press any key to exit...
+  pause >nul
+  exit /b 1
+)
+
+:: Validate file type
+if "!TYPE!"=="" set "TYPE=5"
+set "TYPE_OK=0"
+for %%t in (1 2 3 4 5 6) do if "%%t"=="!TYPE!" set "TYPE_OK=1"
+if "!TYPE_OK!"=="0" (
+  echo [93m┌─────────────────────────────────────────────────────────────┐[0m
+  echo [93m│[0m  [91m[WARNING][0m Invalid type '!TYPE!', defaulting to All text-based  [93m│[0m
+  echo [93m└─────────────────────────────────────────────────────────────┘[0m
+  echo.
+  set "TYPE=5"
+)
+
+:: Scan-Info
 echo [90m┌─────────────────────────────────────────────────────────────┐[0m
 echo [90m│[0m [96m🔍 SCANNING FILESYSTEM[0m                                    [90m│[0m
 echo [90m├─────────────────────────────────────────────────────────────┤[0m
-echo [90m│[0m  [93mSearch term:[0m %SEARCH%                                      [90m│[0m
-if not "%EXCLUDE%"=="" echo [90m│[0m  [93mExcluding:[0m %EXCLUDE%                                       [90m│[0m
+echo [90m│[0m  [93mSearch term:[0m !SEARCH!                                      [90m│[0m
+if not "!EXCLUDE!"=="" echo [90m│[0m  [93mExcluding:[0m !EXCLUDE!                                       [90m│[0m
 echo [90m│[0m                                                             [90m│[0m
 echo [90m│[0m  [92mScanning in progress...[0m                                   [90m│[0m
 echo [90m└─────────────────────────────────────────────────────────────┘[0m
 echo.
 
 :: PowerShell Scan
+set "CFG=%TEMP%\seapcne_%RANDOM%.txt"
+> "%CFG%" echo(!SEARCH!
+>> "%CFG%" echo(!EXCLUDE!
+>> "%CFG%" echo(!TYPE!
+>> "%CFG%" echo(!SHOW!
+
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-"$roots = @('%USERPROFILE%\.config','%USERPROFILE%','%APPDATA%','%LOCALAPPDATA%'); ^
-$excludeRaw = '%EXCLUDE%'; ^
+"$cfg = '%CFG%'; ^
+$v = Get-Content -Path $cfg; ^
+$excludeRaw = $v[1]; ^
 $excludeWords = @(); ^
 if ($excludeRaw -ne '') { $excludeWords = $excludeRaw -split ',' ^| ForEach-Object { $_.Trim().ToLower() } }; ^
-switch ('%TYPE%') { ^
- '1' { $ext = '.json','.yaml','.yml','.toml','.conf','.config' } ^
- '2' { $ext = '.txt','.log' } ^
- '3' { $ext = '.js','.ts','.py','.java','.cpp','.c','.cs' } ^
- '4' { $ext = '.html','.css','.php','.xml' } ^
- '5' { $ext = '.json','.yaml','.yml','.toml','.conf','.config','.txt','.log','.js','.ts','.py','.java','.cpp','.c','.cs','.html','.css','.php','.xml' } ^
- '6' { $ext = $null } ^
- default { $ext = '.txt' } ^
+$search = $v[0]; ^
+$type = $v[2]; ^
+$showPreview = $v[3]; ^
+switch ($type) { ^
+  '1' { $extensions = '.json','.yaml','.yml','.toml','.conf','.config' } ^
+  '2' { $extensions = '.txt','.log' } ^
+  '3' { $extensions = '.js','.ts','.py','.java','.cpp','.c','.cs' } ^
+  '4' { $extensions = '.html','.css','.php','.xml' } ^
+  '5' { $extensions = '.json','.yaml','.yml','.toml','.conf','.config','.txt','.log','.js','.ts','.py','.java','.cpp','.c','.cs','.html','.css','.php','.xml' } ^
+  '6' { $extensions = $null } ^
+  default { $extensions = $null } ^
 }; ^
+$roots = @('%USERPROFILE%'); ^
 $foundCount = 0; ^
+$seen = @{}; ^
 foreach ($root in $roots) { ^
- if (Test-Path $root) { ^
-  Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue ^| ^
-  Where-Object { ^
-   $skipPath = $false; ^
-   $currentPath = $_.DirectoryName.ToLower(); ^
-   foreach ($ex in $excludeWords) { ^
-    if ($ex -ne '' -and $currentPath -match [regex]::Escape($ex)) { $skipPath = $true; break } ^
-   }; ^
-   if ($skipPath) { return $false }; ^
-   if ($ext -eq $null -or $ext -contains $_.Extension) { return $true } else { return $false } ^
-  } ^| ^
-  Select-String -Pattern '%SEARCH%' -SimpleMatch -ErrorAction SilentlyContinue ^| ^
-  ForEach-Object { ^
-   $path = $_.Path; ^
-   $text = ''; ^
-   try { $text = Get-Content $path -Raw -ErrorAction SilentlyContinue } catch {}; ^
-   $skipContent = $false; ^
-   foreach ($ex in $excludeWords) { ^
-    if ($ex -ne '' -and $text -match [regex]::Escape($ex)) { $skipContent = $true } ^
-   }; ^
-   if (-not $skipContent) { ^
+  if (-not (Test-Path $root)) { continue }; ^
+  Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue ^| Where-Object { ^
+    $dir = $_.DirectoryName.ToLower(); ^
+    foreach ($ex in $excludeWords) { ^
+      if ($ex -and $dir.Contains($ex)) { return $false } ^
+    }; ^
+    if ($extensions -and $extensions -notcontains $_.Extension) { return $false }; ^
+    return $true ^
+  } ^| ForEach-Object { ^
+    $path = $_.FullName; ^
+    if ($seen.ContainsKey($path)) { return }; ^
+    $seen[$path] = $true; ^
+    try { ^
+      $text = [System.IO.File]::ReadAllText($path) ^
+    } catch { ^
+      return ^
+    }; ^
+    if (-not $text.Contains($search)) { return }; ^
+    $lines = [regex]::Split($text, '\r?\n'); ^
+    $matchLines = $lines ^| Where-Object { $_ -and $_.Contains($search) }; ^
+    $skip = $false; ^
+    foreach ($ex in $excludeWords) { ^
+      foreach ($line in $matchLines) { ^
+        if ($line.ToLower().Contains($ex)) { $skip = $true; break } ^
+      }; ^
+      if ($skip) { break } ^
+    }; ^
+    if ($skip) { return }; ^
     $foundCount++; ^
     Write-Host ('[92m[FOUND][0m ' + $path); ^
-    if ('%SHOW%' -eq '1') { ^
-     if ($text -and $text.Length -gt 0) { ^
-      $preview = if ($text.Length -gt 200) { $text.Substring(0, 200) } else { $text }; ^
-      $preview = $preview -replace '[\n\r]+',' '; ^
-      Write-Host ('[90m  └─ ' + $preview + '...[0m'); ^
-      Write-Host '  [90m─────────────────────────────────────────────[0m' ^
-     } ^
+    if ($showPreview -eq '1') { ^
+      $first = $matchLines ^| Select-Object -First 1; ^
+      if ($first) { ^
+        $preview = if ($first.Length -gt 200) { $first.Substring(0, 200) } else { $first }; ^
+        $preview = $preview -replace '[\n\r]+',' '; ^
+        Write-Host ('[90m  └─ ' + $preview + '...[0m'); ^
+        Write-Host '  [90m─────────────────────────────────────────────[0m' ^
+      } ^
     } ^
-   } ^
   } ^
- } ^
 }; ^
 Write-Host ''; ^
 Write-Host ('[96m┌─────────────────────────────────────────────────────────────┐[0m'); ^
 Write-Host ('[96m│[0m [92m✓ Scan completed![0m                                              [96m│[0m'); ^
 Write-Host ('[96m│[0m [93m📊 Total matches found: [92m' + $foundCount + '[0m                              [96m│[0m'); ^
 Write-Host ('[96m└─────────────────────────────────────────────────────────────┘[0m')"
+del "%CFG%" >nul 2>&1
 
 echo.
 echo.
